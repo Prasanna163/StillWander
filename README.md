@@ -73,10 +73,20 @@ All builds require Fabric Loader 0.19.3 or newer and Fabric API for the same Min
 | --- | --- |
 | Start or stop Still Wander immediately | `B` |
 | Cut to the next shot | `N` |
+| Open Still Wander settings | `F7` |
+| Toggle uninterrupted capture mode | `F8` |
 | Start automatically | Remain idle for 25 seconds |
-| Exit the cinematic camera | Move, interact, or take damage |
+| Exit normal cinematic mode | Move, interact, or take damage |
 
 Keys can be changed from Minecraft's **Options > Controls > Key Binds** screen.
+
+### Capturing footage and screenshots
+
+`F8` starts Still Wander immediately in uninterrupted capture mode. In this mode, movement and normal player input do not stop the cinematic camera, making it suitable for recording video or composing screenshots.
+
+For a session that also continues when the player takes damage, press `F7` first and turn **Exit on damage** off. Then press `F8`, start your preferred screen recorder, or use Minecraft's `F2` key to capture screenshots. Press `F8` again when you are finished.
+
+Still Wander controls the cinematic camera; it does not encode an MP4 video itself. Use recording software such as OBS Studio, Xbox Game Bar, or another capture tool for video.
 
 ## Promotional artwork
 
