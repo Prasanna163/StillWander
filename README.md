@@ -26,6 +26,21 @@ Still Wander turns idle moments into a slow, cinematic journey through the world
   <img src="assets/branding/still-wander-showcase.jpg" alt="Still Wander cinematic environments across the Overworld, caves, ocean, snow, and Nether" width="100%">
 </p>
 
+## In-game screenshots
+
+<p align="center"><em>Captured in-game while Still Wander was active.</em></p>
+
+<p align="center">
+  <img src="assets/screenshots/still-wander-coastal-panorama.jpg" alt="A wide Still Wander camera shot following a Minecraft coastline" width="100%">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/screenshots/still-wander-boat-sunrise.jpg" alt="Still Wander framing the player in a boat at sunrise"></td>
+    <td width="50%"><img src="assets/screenshots/still-wander-mesa-overlook.jpg" alt="Still Wander framing the player overlooking a mesa landscape"></td>
+  </tr>
+</table>
+
 ## Downloads and compatibility
 
 Choose the JAR that exactly matches your Minecraft version.
@@ -72,28 +87,6 @@ Keys can be changed from Minecraft's **Options > Controls > Key Binds** screen.
     <img src="assets/branding/still-wander-release-poster.jpg" alt="Still Wander release poster — The journey continues" width="620">
   </p>
 </details>
-
-## Brand kit
-
-Official visual assets for project pages, videos, thumbnails, announcements, and press coverage. Select an image to open the full-resolution file.
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <a href="assets/branding/still-wander-primary-logo.jpg"><img src="assets/branding/still-wander-primary-logo.jpg" alt="Still Wander primary logo" width="360"></a><br>
-      <strong>Primary logo</strong>
-    </td>
-    <td align="center" width="50%">
-      <a href="assets/branding/still-wander-icon-mark.jpg"><img src="assets/branding/still-wander-icon-mark.jpg" alt="Still Wander compass camera icon" width="360"></a><br>
-      <strong>Icon mark</strong>
-    </td>
-  </tr>
-</table>
-
-<p align="center">
-  <a href="assets/branding/still-wander-wordmark.jpg"><img src="assets/branding/still-wander-wordmark.jpg" alt="Still Wander horizontal wordmark" width="760"></a><br>
-  <strong>Horizontal wordmark</strong>
-</p>
 
 The Still Wander name, logo, artwork, and distributed mod files are © 2026 Prasanna Kulkarni. All rights reserved.
 
