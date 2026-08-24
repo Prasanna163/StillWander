@@ -14,6 +14,10 @@ Choose the JAR that exactly matches your Minecraft version.
 | 1.21.4 | 21+ | 0.119.4+1.21.4 | [Download](versions/stillwander-1.0.0+1.21.4.jar) | Build and static compatibility checks |
 | 1.21.8 | 21+ | 0.136.1+1.21.8 | [Download](versions/stillwander-1.0.0+1.21.8.jar) | Build and static compatibility checks |
 | 1.21.11 | 21+ | 0.141.6+1.21.11 | [Download](versions/stillwander-1.0.0+1.21.11.jar) | In-game tested |
+| 26.1 | 25+ | 0.145.1+26.1 | [Download](versions/stillwander-1.0.0+26.1.jar) | Build and static compatibility checks |
+| 26.1.1 | 25+ | 0.145.4+26.1.1 | [Download](versions/stillwander-1.0.0+26.1.1.jar) | Build and static compatibility checks |
+| 26.1.2 | 25+ | 0.155.2+26.1.2 | [Download](versions/stillwander-1.0.0+26.1.2.jar) | Build and static compatibility checks |
+| 26.2 | 25+ | 0.158.0+26.2 | [Download](versions/stillwander-1.0.0+26.2.jar) | Build and static compatibility checks |
 
 All builds require Fabric Loader 0.19.3 or newer and Fabric API for the same Minecraft version. The Fabric API versions above are the versions used to build each JAR; a newer compatible Fabric API release for that same Minecraft version may also work.
 
