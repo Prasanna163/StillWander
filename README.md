@@ -1,6 +1,30 @@
-# Still Wander
+<p align="center">
+  <img src="assets/branding/still-wander-banner.jpg" alt="Still Wander — When you stop exploring, Still Wander doesn't" width="100%">
+</p>
 
-Still Wander is a client-side Fabric mod that turns idle Minecraft moments into a slow, cinematic tour of the player and the surrounding world. It chooses varied close, wide, environmental, cave, and entity shots, with smooth camera movement and independent cinematic FOV.
+<h1 align="center">Still Wander</h1>
+
+<p align="center">
+  <strong>When you stop exploring, Still Wander doesn't.</strong><br>
+  A cinematic AFK camera mod for Minecraft Fabric.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/loader-Fabric-d8c49a?style=flat-square" alt="Fabric Loader">
+  <img src="https://img.shields.io/badge/environment-client--side-39b8c8?style=flat-square" alt="Client-side">
+  <img src="https://img.shields.io/badge/Minecraft-10%20supported%20versions-d49a43?style=flat-square" alt="Ten supported Minecraft versions">
+</p>
+
+Still Wander turns idle moments into a slow, cinematic journey through the world around you. Its environment-aware camera chooses varied player, landscape, cave, structure, and entity compositions, then moves between them with smooth pans, deliberate pacing, and independent cinematic FOV.
+
+- **Scene-aware direction** adapts shots to open landscapes, forests, interiors, caves, weather, time, nearby entities, and terrain.
+- **Cinematic movement** blends slow pans, tracking shots, wide establishing views, intimate details, and occasional static compositions.
+- **Safe AFK behavior** returns control immediately when you move, interact, or take damage.
+- **Client-side only** means nothing needs to be installed on the server.
+
+<p align="center">
+  <img src="assets/branding/still-wander-showcase.jpg" alt="Still Wander cinematic environments across the Overworld, caves, ocean, snow, and Nether" width="100%">
+</p>
 
 ## Downloads and compatibility
 
@@ -30,15 +54,47 @@ All builds require Fabric Loader 0.19.3 or newer and Fabric API for the same Min
 
 ## Controls
 
-- Stay idle for 25 seconds to start the cinematic camera automatically.
-- Press `B` to start or stop Still Wander immediately.
-- Press `N` to cut to the next shot.
-- Normal movement or input exits the cinematic camera. Taking damage also exits it.
+| Action | Default |
+| --- | --- |
+| Start or stop Still Wander immediately | `B` |
+| Cut to the next shot | `N` |
+| Start automatically | Remain idle for 25 seconds |
+| Exit the cinematic camera | Move, interact, or take damage |
 
-The keys can be changed from Minecraft's **Options > Controls > Key Binds** screen.
+Keys can be changed from Minecraft's **Options > Controls > Key Binds** screen.
 
-Still Wander runs entirely on the client and does not need to be installed on a server.
+## Promotional artwork
 
-Developed by Prasanna163 with generative-AI coding assistance.
+<details>
+  <summary><strong>View the Still Wander release poster</strong></summary>
+  <br>
+  <p align="center">
+    <img src="assets/branding/still-wander-release-poster.jpg" alt="Still Wander release poster — The journey continues" width="620">
+  </p>
+</details>
 
-Copyright © 2026 Prasanna Kulkarni. All rights reserved.
+## Brand kit
+
+Official visual assets for project pages, videos, thumbnails, announcements, and press coverage. Select an image to open the full-resolution file.
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="assets/branding/still-wander-primary-logo.jpg"><img src="assets/branding/still-wander-primary-logo.jpg" alt="Still Wander primary logo" width="360"></a><br>
+      <strong>Primary logo</strong>
+    </td>
+    <td align="center" width="50%">
+      <a href="assets/branding/still-wander-icon-mark.jpg"><img src="assets/branding/still-wander-icon-mark.jpg" alt="Still Wander compass camera icon" width="360"></a><br>
+      <strong>Icon mark</strong>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <a href="assets/branding/still-wander-wordmark.jpg"><img src="assets/branding/still-wander-wordmark.jpg" alt="Still Wander horizontal wordmark" width="760"></a><br>
+  <strong>Horizontal wordmark</strong>
+</p>
+
+The Still Wander name, logo, artwork, and distributed mod files are © 2026 Prasanna Kulkarni. All rights reserved.
+
+Developed by [Prasanna163](https://github.com/Prasanna163) with generative-AI coding assistance.
