@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Installation and compatibility help
+    url: https://github.com/Prasanna163/StillWander/blob/main/SUPPORT.md
+    about: Check supported versions and required diagnostic information first.

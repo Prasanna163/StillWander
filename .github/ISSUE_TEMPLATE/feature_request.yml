@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest a focused cinematic-camera improvement
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Example scene or environment
+      description: Explain where this would matter, such as caves, forests, landscapes, entities, or player detail shots.
