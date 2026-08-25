@@ -1,0 +1,90 @@
+name: Restore Cinecraft source
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-cinecraft-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out full repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Recover the original Cinecraft 1.1.1 binary from repository history
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show fde823d0dce0a105a1b95461f796b73d00e1e746:vendor/cinecraft-1.1.1+1.21.11.jar > /tmp/cinecraft-1.1.1+1.21.11.jar
+          echo '16D35350387917DA9CDACB8D4E96DB54E6DA3DB548032575974D767C78300C25  /tmp/cinecraft-1.1.1+1.21.11.jar' | sha256sum -c -
+
+      - name: Download CFR decompiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            https://repo1.maven.org/maven2/org/benf/cfr/0.152/cfr-0.152.jar \
+            --output /tmp/cfr.jar
+
+      - name: Reconstruct readable Java source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/cinecraft-source src/main/java
+          mkdir -p /tmp/cinecraft-source src/main/java
+          java -jar /tmp/cfr.jar /tmp/cinecraft-1.1.1+1.21.11.jar \
+            --outputdir /tmp/cinecraft-source \
+            --silent true
+          test -d /tmp/cinecraft-source/com/cinecraft
+          mkdir -p src/main/java/com
+          cp -R /tmp/cinecraft-source/com/cinecraft src/main/java/com/
+          find src/main/java -type f -name '*.java' -print | sort
+
+      - name: Add provenance record
+        shell: bash
+        run: |
+          cat > SOURCE_PROVENANCE.md <<'EOF'
+          # Source provenance
+
+          `Cinecraft` was the original development name of the project that is now published as **Still Wander**.
+
+          The first Still Wander GitHub release preserved the already-built Cinecraft 1.1.1 implementation as a vendored JAR while the public identifiers and branding were changed. The repository was later simplified to release downloads, which left the Java source tree absent from the public branch.
+
+          The Java files now under `src/main/java/com/cinecraft/` were recovered from the exact Cinecraft 1.1.1 binary that exists in this repository's own first release commit:
+
+          - historical commit: `fde823d0dce0a105a1b95461f796b73d00e1e746`
+          - historical path: `vendor/cinecraft-1.1.1+1.21.11.jar`
+          - SHA-256: `16D35350387917DA9CDACB8D4E96DB54E6DA3DB548032575974D767C78300C25`
+          - reconstruction tool: CFR 0.152
+
+          This recovery makes the implementation readable and auditable again. Because the original `.java` files were not present in this Git repository's history, decompilation cannot reproduce comments, formatting, or every original local-variable name exactly. The recovered files therefore represent the implementation contained in the project's own previously distributed Cinecraft binary, rather than a claim that decompiler formatting is the original handwritten formatting.
+
+          The `com.cinecraft` package and Cinecraft identifiers are intentionally preserved in this recovered tree because they document the project's pre-Still-Wander identity and make the lineage directly inspectable.
+          EOF
+
+      - name: Commit recovered source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/main/java SOURCE_PROVENANCE.md
+          if git diff --cached --quiet; then
+            echo 'No source changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Restore readable Cinecraft source from original 1.1.1 binary'
+          git push origin HEAD:main
