@@ -1,0 +1,15 @@
+/.gradle/
+/build/
+/logs/
+/run/
+/Video/
+/src/
+
+**/.gradle/
+**/build/
+
+.idea/
+.vscode/
+*.iml
+*.log
+

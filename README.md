@@ -88,6 +88,34 @@ For a session that also continues when the player takes damage, press `F7` first
 
 Still Wander controls the cinematic camera; it does not encode an MP4 video itself. Use recording software such as OBS Studio, Xbox Game Bar, or another capture tool for video.
 
+## Source and build
+
+The actual Still Wander client source is public in [`source/1.21.11`](source/1.21.11). It is the authored 1.1.1 implementation that became Still Wander 1.0.0, with the public branding applied directly in source rather than by patching a compiled JAR.
+
+The internal Java package and several class names still use `com.cinecraft`, the project's original working-title namespace. They are retained deliberately for binary traceability; the installed mod ID, resources, configuration, controls, and user-facing name are `stillwander` / Still Wander.
+
+To build the canonical Minecraft 1.21.11 release on Windows:
+
+```powershell
+.\gradlew.bat -p source\1.21.11 clean build
+```
+
+On Linux or macOS:
+
+```bash
+./gradlew -p source/1.21.11 clean build
+```
+
+The distributable JAR is written to `source/1.21.11/build/libs`. The build requires Java 21 and downloads the declared Minecraft, Yarn, Fabric Loader, Fabric API, and Fabric Loom dependencies on first use. It does not need to launch Minecraft.
+
+This source tree targets 1.21.11. The other downloads in `versions/` are mapping/API compatibility ports of the same Still Wander 1.0 behavior; this repository does not claim that those version-specific JARs can be rebuilt unchanged from the 1.21.11 project.
+
+The full development timeline, binary verification, relationship to IDLE, and AI disclosure are documented in [PROVENANCE.md](PROVENANCE.md).
+
+## License
+
+The code is public for inspection and release verification but is not currently open-source licensed. See [LICENSE](LICENSE). A more permissive license can be chosen later without obscuring the present source history.
+
 ## Promotional artwork
 
 <details>
