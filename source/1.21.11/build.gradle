@@ -36,6 +36,19 @@ processResources {
     filesMatching('fabric.mod.json') {
         expand 'version': inputs.properties.version
     }
+    doLast {
+        [
+                'fabric.mod.json',
+                'stillwander.mixins.json',
+                'assets/stillwander/lang/en_us.json'
+        ].each { relativePath ->
+            File resource = destinationDir.toPath().resolve(relativePath).toFile()
+            String normalized = resource.getText('UTF-8')
+                    .replace('\r\n', '\n')
+                    .replace('\r', '\n')
+            resource.setText(normalized, 'UTF-8')
+        }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

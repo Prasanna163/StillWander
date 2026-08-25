@@ -24,6 +24,13 @@ needlessly difficult.
   original development record, rebuilt, verified, branded at source level, and
   added to this repository.
 
+A short-lived earlier recovery commit on August 25 published CFR-decompiled
+Java because the authored files were not in Git history. Once the original
+development record was located and shown to reproduce the release exactly,
+that decompiled tree and its regeneration workflow were superseded by the
+authored, buildable source now under `source/1.21.11`. The decompilation commits
+remain visible in Git history rather than being rewritten away.
+
 ## Verification performed
 
 The restored authored source was first built without branding changes. It

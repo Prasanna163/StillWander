@@ -22,16 +22,6 @@ Still Wander turns idle moments into a slow, cinematic journey through the world
 - **Safe AFK behavior** returns control immediately when you move, interact, or take damage.
 - **Client-side only** means nothing needs to be installed on the server.
 
-## Source code and project lineage
-
-The readable Java implementation is publicly available under [`src/main/java/com/cinecraft/`](src/main/java/com/cinecraft/).
-
-**Cinecraft was the original development name of this project before it became Still Wander.** The recovered source tree preserves the original `com.cinecraft` package names so that this lineage is directly inspectable rather than hidden by the later rebrand.
-
-The first public Still Wander GitHub release used the project's already-built Cinecraft 1.1.1 binary during the rename. The exact historical binary, its SHA-256, the original repository commit containing it, and the source-recovery method are documented in [`SOURCE_PROVENANCE.md`](SOURCE_PROVENANCE.md).
-
-The original `.java` files were not committed to this Git repository before the repository was simplified, so the currently published readable tree was reconstructed from that exact historical project binary. Decompilation preserves the executable implementation but cannot reproduce original comments, formatting, or every local-variable name.
-
 <p align="center">
   <img src="assets/branding/still-wander-showcase.jpg" alt="Still Wander cinematic environments across the Overworld, caves, ocean, snow, and Nether" width="100%">
 </p>
