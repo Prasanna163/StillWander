@@ -12,14 +12,15 @@ import net.minecraft.client.MinecraftClient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.Random;
 import java.util.function.Supplier;
 
 /** Directs environment-aware, independently generated shots until the player returns. */
 public final class CinematicDirector {
-    private final SceneScanner scanner = new SceneScanner();
-    private final ShotPlanner planner = new ShotPlanner();
-    private final Random random = new Random();
+    private final SceneScanner scanner;
+    private final ShotPlanner planner;
+    private final Random random;
     private CinematicShot currentShot;
     private CameraPose currentPose;
     private ShotType currentShotType;
@@ -29,8 +30,25 @@ public final class CinematicDirector {
     private ShotComposition currentComposition;
     private String currentSubjectKey;
     private int shotNumber;
+    private long lastSurveyMicros;
     private boolean hidHud;
     private boolean hudWasHidden;
+
+    public CinematicDirector() {
+        this(new Random());
+    }
+
+    /** Creates a reproducible director for automated scene fixtures. */
+    public CinematicDirector(long seed) {
+        this(new Random(seed));
+    }
+
+    private CinematicDirector(Random source) {
+        Objects.requireNonNull(source, "source");
+        this.random = new Random(source.nextLong());
+        this.scanner = new SceneScanner(new Random(source.nextLong()));
+        this.planner = new ShotPlanner(new Random(source.nextLong()));
+    }
 
     public void tick(MinecraftClient client) {
         if (!hidHud) {
@@ -42,7 +60,11 @@ public final class CinematicDirector {
         client.options.hudHidden = CinecraftConfig.INSTANCE.hideHud()
                 && !CinecraftConfig.INSTANCE.debugOverlay();
         if (currentShot == null || currentShot.finished()) {
-            if (profile == null || shotNumber % 4 == 0) profile = scanner.survey(client);
+            if (profile == null || shotNumber % 4 == 0) {
+                long surveyStarted = System.nanoTime();
+                profile = scanner.survey(client);
+                lastSurveyMicros = (System.nanoTime() - surveyStarted) / 1_000L;
+            }
             ShotSelection selection = chooseShot(client, profile);
             boolean wide = selection.wide();
             SceneSubject subject = selection.subject();
@@ -96,11 +118,7 @@ public final class CinematicDirector {
     }
 
     private ShotSelection chooseShot(MinecraftClient client, EnvironmentProfile currentProfile) {
-        ShotSelection selected = chooseWeighted(client, currentProfile);
-        for (int retry = 0; retry < 3 && selected.subject().type() == currentSubjectType; retry++) {
-            selected = chooseWeighted(client, currentProfile);
-        }
-        return selected;
+        return chooseWeighted(client, currentProfile);
     }
 
     private ShotSelection chooseWeighted(MinecraftClient client, EnvironmentProfile currentProfile) {
@@ -118,33 +136,35 @@ public final class CinematicDirector {
         if (currentProfile.weather() == SceneWeather.THUNDER) wideBonus -= 4.0;
 
         if (config.landscapeShots() && currentProfile.supportsWideShots()) {
-            add(choices, Math.max(5.0, 20.0 + wideBonus),
+            add(choices, continuityWeight(SubjectType.LANDSCAPE, Math.max(5.0, 20.0 + wideBonus)),
                     () -> new ShotSelection(scanner.landscapeSubject(currentProfile), true));
         }
         if (config.entityShots()) {
-            add(choices, currentProfile.underground() ? 26.0 : 22.0,
+            add(choices, continuityWeight(SubjectType.ENTITY, currentProfile.underground() ? 26.0 : 22.0),
                     () -> new ShotSelection(scanner.findSubject(client, SubjectType.ENTITY), false));
         }
         if (config.groupShots()) {
-            add(choices, currentProfile.underground() ? 9.0 : 13.0,
+            add(choices, continuityWeight(SubjectType.GROUP, currentProfile.underground() ? 9.0 : 13.0),
                     () -> new ShotSelection(scanner.findSubject(client, SubjectType.GROUP), false));
         }
         if (config.featureShots() && (!currentProfile.underground() || config.interiorShots())) {
             double featureWeight = currentProfile.biomeMood() == BiomeMood.FOREST || currentProfile.underground()
                     ? 21.0
                     : 14.0;
-            add(choices, featureWeight,
+            add(choices, continuityWeight(SubjectType.FEATURE, featureWeight),
                     () -> new ShotSelection(scanner.findSubject(client, SubjectType.FEATURE), false));
         }
         if (config.landscapeShots() && (!currentProfile.underground() || config.interiorShots())) {
-            add(choices, currentProfile.underground() ? 10.0 : 12.0,
+            add(choices, continuityWeight(SubjectType.LANDSCAPE, currentProfile.underground() ? 10.0 : 12.0),
                     () -> new ShotSelection(scanner.findSubject(client, SubjectType.LANDSCAPE), false));
         }
         if (config.playerShots()) {
-            add(choices, 10.0, () -> new ShotSelection(scanner.playerSubject(client), false));
+            add(choices, continuityWeight(SubjectType.PLAYER, 10.0),
+                    () -> new ShotSelection(scanner.playerSubject(client), false));
         }
         if (config.playerDetailShots()) {
-            add(choices, 11.0, () -> new ShotSelection(scanner.playerDetailSubject(client), false));
+            add(choices, continuityWeight(SubjectType.PLAYER_DETAIL, 11.0),
+                    () -> new ShotSelection(scanner.playerDetailSubject(client), false));
         }
         if (choices.isEmpty()) return new ShotSelection(scanner.playerSubject(client), false);
 
@@ -155,6 +175,10 @@ public final class CinematicDirector {
             if (roll <= 0.0) return choice.factory().get();
         }
         return choices.getLast().factory().get();
+    }
+
+    private double continuityWeight(SubjectType type, double baseWeight) {
+        return baseWeight * planner.subjectTypeWeightMultiplier(type);
     }
 
     private static void add(List<WeightedChoice> choices, double weight, Supplier<ShotSelection> factory) {
@@ -177,6 +201,7 @@ public final class CinematicDirector {
         currentSubjectKey = null;
         profile = null;
         shotNumber = 0;
+        lastSurveyMicros = 0L;
         scanner.resetSubjects();
         planner.reset();
         if (hidHud) {
@@ -228,6 +253,10 @@ public final class CinematicDirector {
     public String plannerSource() { return planner.diagnosticSource(); }
     public String plannerDecision() { return planner.diagnosticDecision(); }
     public int plannerRejected() { return planner.diagnosticRejected(); }
+    public String plannerContinuity() { return planner.diagnosticContinuity(); }
+    public long plannerMicros() { return planner.lastPlanningMicros(); }
+    public long surveyMicros() { return lastSurveyMicros; }
+    public List<ShotTrace> recentShotTraces() { return planner.recentTraces(); }
 
     private record ShotSelection(SceneSubject subject, boolean wide) { }
     private record WeightedChoice(double weight, Supplier<ShotSelection> factory) { }

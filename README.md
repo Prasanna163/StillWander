@@ -90,11 +90,11 @@ Still Wander controls the cinematic camera; it does not encode an MP4 video itse
 
 ## Source and build
 
-The actual Still Wander client source is public in [`source/1.21.11`](source/1.21.11). It is the authored 1.1.1 implementation that became Still Wander 1.0.0, with the public branding applied directly in source rather than by patching a compiled JAR.
+The actual Still Wander client source is public in [`source/1.21.11`](source/1.21.11). The [`v1.0.0`](https://github.com/Prasanna163/StillWander/tree/v1.0.0) tag preserves the authored implementation that reproduces the published 1.0.0 JAR. The current source tree may contain clearly versioned development work for the next release; its exact version is declared in `source/1.21.11/gradle.properties`.
 
 The internal Java package and several class names still use `com.cinecraft`, the project's original working-title namespace. They are retained deliberately for binary traceability; the installed mod ID, resources, configuration, controls, and user-facing name are `stillwander` / Still Wander.
 
-To build the canonical Minecraft 1.21.11 release on Windows:
+To build the current Minecraft 1.21.11 source on Windows:
 
 ```powershell
 .\gradlew.bat -p source\1.21.11 clean build
@@ -106,7 +106,7 @@ On Linux or macOS:
 ./gradlew -p source/1.21.11 clean build
 ```
 
-The distributable JAR is written to `source/1.21.11/build/libs`. The build requires Java 21 and downloads the declared Minecraft, Yarn, Fabric Loader, Fabric API, and Fabric Loom dependencies on first use. It does not need to launch Minecraft.
+The distributable JAR is written to `source/1.21.11/build/libs`. The build requires a Java 21 **JDK** (not only a JRE) and downloads the declared Minecraft, Yarn, Fabric Loader, Fabric API, and Fabric Loom dependencies on first use. It does not need to launch Minecraft. Development builds also run the automated quality suite described in [`source/1.21.11/QUALITY.md`](source/1.21.11/QUALITY.md).
 
 This source tree targets 1.21.11. The other downloads in `versions/` are mapping/API compatibility ports of the same Still Wander 1.0 behavior; this repository does not claim that those version-specific JARs can be rebuilt unchanged from the 1.21.11 project.
 

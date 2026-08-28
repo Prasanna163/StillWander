@@ -12,21 +12,38 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 
 /** Blends curated cinematic compositions with scored scene-specific coverage. */
 public final class ShotPlanner {
     private static final int RECENT_PATH_LIMIT = 12;
+    private static final int RECENT_TRACE_LIMIT = 32;
+    private static final int LIBRARY_CANDIDATE_LIMIT = 4;
+    private static final int LIBRARY_PRESET_LIMIT = 12;
     private final ArrayDeque<PathSignature> recentPaths = new ArrayDeque<>();
     private final ArrayDeque<String> recentPresets = new ArrayDeque<>();
-    private final Random random = new Random();
-    private ShotComposition lastComposition;
-    private ShotType lastShotType;
-    private float lastFov = Float.NaN;
+    private final ArrayDeque<ShotTrace> recentTraces = new ArrayDeque<>();
+    private final ContinuityState continuityState = new ContinuityState();
+    private final ContinuityRules continuityRules = new ContinuityRules();
+    private final Random random;
     private String diagnosticSource = "none";
     private String diagnosticDecision = "waiting";
+    private String diagnosticContinuity = "opening";
     private int diagnosticRejected;
+    private long planningStartedNanos;
+    private long lastPlanningMicros;
+    private long traceNumber;
+
+    public ShotPlanner() {
+        this(new Random());
+    }
+
+    /** Allows deterministic candidate generation in automated scene fixtures. */
+    public ShotPlanner(Random random) {
+        this.random = Objects.requireNonNull(random, "random");
+    }
 
     public Optional<ShotPlan> plan(
             MinecraftClient client,
@@ -35,6 +52,7 @@ public final class ShotPlanner {
             EnvironmentProfile profile,
             boolean preferWide
     ) {
+        planningStartedNanos = System.nanoTime();
         boolean wide = preferWide && profile.supportsWideShots();
         diagnosticRejected = 0;
         if (random.nextDouble() < 0.56) {
@@ -70,20 +88,31 @@ public final class ShotPlanner {
                 diagnosticRejected++;
                 continue;
             }
+            ContinuityFrame frame = ContinuityFrame.from(generated.plan(), subject);
+            ContinuityAssessment continuity = continuityRules.assess(continuityState, frame);
             survivors.add(new ScoredPlan(
                     generated.plan(),
                     generated.signature(),
                     score(generated, profile, wide)
                             + scanner.compositionScore(client, generated.plan(), profile)
+                            + continuity.adjustment(),
+                    frame,
+                    continuity,
+                    null
             ));
         }
 
-        return survivors.stream()
-                .max(Comparator.comparingDouble(ScoredPlan::score))
-                .map(selected -> {
-                    remember(selected.signature(), selected.plan(), selected.score());
-                    return selected.plan();
-                });
+        Optional<ScoredPlan> selected = survivors.stream()
+                .max(Comparator.comparingDouble(ScoredPlan::score));
+        if (selected.isEmpty()) {
+            lastPlanningMicros = (System.nanoTime() - planningStartedNanos) / 1_000L;
+            diagnosticSource = "none";
+            diagnosticDecision = "no safe candidate";
+            diagnosticContinuity = continuityState.last().isEmpty() ? "opening" : "preserved";
+            return Optional.empty();
+        }
+        remember(selected.get());
+        return Optional.of(selected.get().plan());
     }
 
     private Optional<ShotPlan> planFromLibrary(
@@ -105,12 +134,18 @@ public final class ShotPlanner {
                 .toList();
         if (!fresh.isEmpty()) matching = new ArrayList<>(fresh);
 
+        List<ScoredPlan> survivors = new ArrayList<>();
+        int visitedPresets = 0;
         for (ShotPreset preset : matching) {
-            for (int attempt = 0; attempt < 10; attempt++) {
+            if (visitedPresets++ >= LIBRARY_PRESET_LIMIT) break;
+            for (int attempt = 0; attempt < 6; attempt++) {
                 GeneratedPlan generated = instantiatePreset(subject, profile, preset);
                 if (generated == null) continue;
                 generated = adaptToScene(client, scanner, generated, subject, profile, wide, true);
-                if (!framingIsUsable(generated.plan(), generated.aerial(), wide)) continue;
+                if (!framingIsUsable(generated.plan(), generated.aerial(), wide)) {
+                    diagnosticRejected++;
+                    continue;
+                }
                 if (!scanner.isPathUsable(
                         client,
                         generated.plan().path(),
@@ -121,14 +156,30 @@ public final class ShotPlanner {
                     diagnosticRejected++;
                     continue;
                 }
+                ContinuityFrame frame = ContinuityFrame.from(generated.plan(), subject);
+                ContinuityAssessment continuity = continuityRules.assess(continuityState, frame);
                 double selectedScore = score(generated, profile, wide)
-                        + scanner.compositionScore(client, generated.plan(), profile);
-                remember(generated.signature(), generated.plan(), selectedScore);
-                rememberPreset(preset.name());
-                return Optional.of(generated.plan());
+                        + scanner.compositionScore(client, generated.plan(), profile)
+                        + continuity.adjustment();
+                survivors.add(new ScoredPlan(
+                        generated.plan(),
+                        generated.signature(),
+                        selectedScore,
+                        frame,
+                        continuity,
+                        preset.name()
+                ));
+                break;
             }
+            if (survivors.size() >= LIBRARY_CANDIDATE_LIMIT) break;
         }
-        return Optional.empty();
+        return survivors.stream()
+                .max(Comparator.comparingDouble(ScoredPlan::score))
+                .map(selected -> {
+                    remember(selected);
+                    rememberPreset(selected.presetName());
+                    return selected.plan();
+                });
     }
 
     private GeneratedPlan adaptToScene(
@@ -646,60 +697,77 @@ public final class ShotPlanner {
             else if (recent.sector() == generated.signature().sector()) score -= 4.5;
         }
 
-        ShotComposition composition = generated.plan().composition();
-        if (lastComposition != null) {
-            int framingStep = Math.abs(composition.framing().ordinal() - lastComposition.framing().ordinal());
-            if (framingStep == 0) score -= 8.0;
-            else if (framingStep == 1) score += 5.0;
-            else if (framingStep >= 3) score -= 9.0;
-            if (composition.placement() == lastComposition.placement()) score -= 2.5;
-            if (composition.action().moving()
-                    && composition.movementDirection() != 0
-                    && lastComposition.movementDirection() != 0
-                    && composition.movementDirection() != lastComposition.movementDirection()) {
-                score -= 10.0;
-            }
-        }
-        if (lastShotType == generated.plan().type()) score -= 4.0;
-        float openingFov = generated.plan().fovPath().sample(0.0);
-        if (Float.isFinite(lastFov)) {
-            double lensJump = Math.abs(openingFov - lastFov);
-            if (lensJump > 22.0) score -= (lensJump - 22.0) * 1.35;
-        }
         return score;
     }
 
-    private void remember(PathSignature signature, ShotPlan plan, double score) {
-        recentPaths.remove(signature);
-        recentPaths.addFirst(signature);
+    private void remember(ScoredPlan selected) {
+        recentPaths.remove(selected.signature());
+        recentPaths.addFirst(selected.signature());
         while (recentPaths.size() > RECENT_PATH_LIMIT) recentPaths.removeLast();
-        lastComposition = plan.composition();
-        lastShotType = plan.type();
-        lastFov = plan.fovPath().sample(1.0);
+        continuityState.remember(selected.frame());
+        lastPlanningMicros = (System.nanoTime() - planningStartedNanos) / 1_000L;
+        ShotPlan plan = selected.plan();
+        ShotTrace trace = new ShotTrace(
+                ++traceNumber,
+                selected.frame().subjectKey(),
+                selected.frame().subjectType(),
+                plan.type(),
+                selected.frame().scale(),
+                selected.frame().cameraSide(),
+                selected.frame().screenDirection(),
+                plan.path().sample(0.0),
+                plan.path().sample(1.0),
+                selected.frame().openingFov(),
+                selected.frame().endingFov(),
+                plan.durationMillis(),
+                plan.source(),
+                selected.score(),
+                selected.continuity().adjustment(),
+                selected.continuity().reasons(),
+                diagnosticRejected,
+                lastPlanningMicros
+        );
+        recentTraces.addFirst(trace);
+        while (recentTraces.size() > RECENT_TRACE_LIMIT) recentTraces.removeLast();
         diagnosticSource = plan.source();
         diagnosticDecision = String.format(
                 java.util.Locale.ROOT,
                 "%s %s %.1f",
                 plan.composition().framing(),
                 plan.composition().placement(),
-                score
+                selected.score()
         );
+        diagnosticContinuity = selected.continuity().summary();
     }
 
     public void reset() {
         recentPaths.clear();
         recentPresets.clear();
-        lastComposition = null;
-        lastShotType = null;
-        lastFov = Float.NaN;
+        continuityState.reset();
         diagnosticSource = "none";
         diagnosticDecision = "waiting";
+        diagnosticContinuity = "opening";
         diagnosticRejected = 0;
+        planningStartedNanos = 0L;
+        lastPlanningMicros = 0L;
     }
 
     public String diagnosticSource() { return diagnosticSource; }
     public String diagnosticDecision() { return diagnosticDecision; }
+    public String diagnosticContinuity() { return diagnosticContinuity; }
     public int diagnosticRejected() { return diagnosticRejected; }
+    public long lastPlanningMicros() { return lastPlanningMicros; }
+    public List<ShotTrace> recentTraces() { return List.copyOf(recentTraces); }
+
+    public double subjectContinuityAdjustment(SceneSubject subject) {
+        return continuityRules.subjectAdjustment(continuityState, subject.key(), subject.type());
+    }
+
+    public double subjectTypeWeightMultiplier(SubjectType subjectType) {
+        ContinuityFrame previous = continuityState.last().orElse(null);
+        if (previous == null || previous.subjectType() != subjectType) return 1.0;
+        return continuityState.consecutiveSubjectType(subjectType) >= 2 ? 0.38 : 1.15;
+    }
 
     private void rememberPreset(String name) {
         recentPresets.remove(name);
@@ -769,7 +837,14 @@ public final class ShotPlanner {
             boolean passage
     ) { }
 
-    private record ScoredPlan(ShotPlan plan, PathSignature signature, double score) { }
+    private record ScoredPlan(
+            ShotPlan plan,
+            PathSignature signature,
+            double score,
+            ContinuityFrame frame,
+            ContinuityAssessment continuity,
+            String presetName
+    ) { }
 
     private record PathSignature(int sector, int radiusBand, int heightBand, int direction) { }
 }

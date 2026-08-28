@@ -23,6 +23,9 @@ needlessly difficult.
 - **August 25, 2026:** the authored 1.1.1 source snapshot was restored from the
   original development record, rebuilt, verified, branded at source level, and
   added to this repository.
+- **August 28, 2026:** development of Still Wander 1.1 began from that verified
+  baseline. The first development milestone added deterministic test fixtures,
+  build/test CI, planning diagnostics, and continuity-aware shot scoring.
 
 A short-lived earlier recovery commit on August 25 published CFR-decompiled
 Java because the authored files were not in Git history. Once the original
@@ -50,6 +53,11 @@ The published 1.21.11 JAR has SHA-256:
 
 `5267B076EA5579D989A84F4D9AB49AF8833294B0BE7B2759E251F1173C4AC422`
 
+The exact 1.0.0 source and release-verification workflow are preserved by the
+`v1.0.0` Git tag. Later development versions intentionally produce different
+class entries and use their own versioned artifacts; published-JAR parity runs
+only for release tags or a manual release-verification run.
+
 ## Relationship to IDLE
 
 [IDLE - Inactive Dynamic Lens Exploration](https://www.curseforge.com/minecraft/mc-mods/idle)
@@ -74,4 +82,3 @@ without generative-AI assistance.
 
 The source is published for inspection and verification. See [LICENSE](LICENSE)
 for the current usage terms.
-

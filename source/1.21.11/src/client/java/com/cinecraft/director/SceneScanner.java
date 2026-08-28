@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Set;
+import java.util.Objects;
 
 /** Surveys the scene and provides collision and visibility tests to the procedural planner. */
 public final class SceneScanner {
@@ -39,7 +40,16 @@ public final class SceneScanner {
 
     private final ArrayDeque<String> recentSubjects = new ArrayDeque<>();
     private final ArrayDeque<SubjectType> environmentDeck = new ArrayDeque<>();
-    private final Random random = new Random();
+    private final Random random;
+
+    public SceneScanner() {
+        this(new Random());
+    }
+
+    /** Allows repeatable scanner choices in fixtures and diagnostics. */
+    public SceneScanner(Random random) {
+        this.random = Objects.requireNonNull(random, "random");
+    }
 
     public SceneSubject playerSubject(MinecraftClient client) {
         PlayerEntity player = client.player;

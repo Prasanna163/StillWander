@@ -2,21 +2,10 @@ name: Verify source build
 
 on:
   push:
-    paths:
-      - '.github/workflows/verify-source-build.yml'
-      - 'gradle/**'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - 'source/1.21.11/**'
-      - 'versions/stillwander-1.0.0+1.21.11.jar'
-  pull_request:
-    paths:
-      - '.github/workflows/verify-source-build.yml'
-      - 'gradle/**'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - 'source/1.21.11/**'
-      - 'versions/stillwander-1.0.0+1.21.11.jar'
+    tags:
+      - 'v*'
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -49,8 +38,19 @@ jobs:
           from pathlib import Path
           from zipfile import ZipFile
 
-          published = Path('versions/stillwander-1.0.0+1.21.11.jar')
-          built = Path('source/1.21.11/build/libs/stillwander-1.0.0+1.21.11.jar')
+          properties = {}
+          for line in Path('source/1.21.11/gradle.properties').read_text(encoding='utf-8').splitlines():
+              if '=' in line and not line.lstrip().startswith('#'):
+                  key, value = line.split('=', 1)
+                  properties[key.strip()] = value.strip()
+
+          artifact = f"{properties['archives_base_name']}-{properties['mod_version']}.jar"
+          published = Path('versions') / artifact
+          built = Path('source/1.21.11/build/libs') / artifact
+          if not published.is_file():
+              raise SystemExit(f'Missing published release artifact: {published}')
+          if not built.is_file():
+              raise SystemExit(f'Missing source-built artifact: {built}')
 
           def files(path: Path) -> dict[str, bytes]:
               with ZipFile(path) as jar:

@@ -56,6 +56,8 @@ public final class CinecraftDebugHud {
         }
         lines.add("path  " + director.plannerSource());
         lines.add("score " + director.plannerDecision() + " / rejected " + director.plannerRejected());
+        lines.add("cut   " + director.plannerContinuity());
+        lines.add("time  plan " + director.plannerMicros() + "us / survey " + director.surveyMicros() + "us");
 
         int width = lines.stream().mapToInt(client.textRenderer::getWidth).max().orElse(150) + 12;
         int height = lines.size() * 11 + 9;
